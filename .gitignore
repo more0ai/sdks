@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.turbo/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Test and coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Logs and debug
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# TypeScript
+*.tsbuildinfo

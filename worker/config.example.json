@@ -1,0 +1,99 @@
+{
+  "sandboxes": [
+    {
+      "id": "default",
+      "name": "Default sandbox",
+      "env": {
+        "LOG_LEVEL": "info",
+        "APP_ENV": "development"
+      }
+    },
+    {
+      "id": "prod-like",
+      "name": "Production-like sandbox",
+      "env": {
+        "LOG_LEVEL": "warn",
+        "APP_ENV": "production"
+      }
+    }
+  ],
+  "workerPools": [
+    {
+      "id": "pool-system",
+      "name": "System capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "system.health"
+      ],
+      "concurrentWorkers": 4,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-auth",
+      "name": "Auth and config pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "system.auth",
+        "system.config"
+      ],
+      "concurrentWorkers": 2,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-workflows",
+      "name": "Workflow capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "workflow.ingest",
+        "workflow.approval"
+      ],
+      "concurrentWorkers": 2,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-agents",
+      "name": "Agent capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "agent.assistant",
+        "agent.summarizer"
+      ],
+      "concurrentWorkers": 4,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-models",
+      "name": "Model capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "model.completion",
+        "model.embedding"
+      ],
+      "concurrentWorkers": 4,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-prompts",
+      "name": "Prompt capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "prompt.template",
+        "prompt.chat"
+      ],
+      "concurrentWorkers": 2,
+      "consumerGroup": "capabilities-workers"
+    },
+    {
+      "id": "pool-tools",
+      "name": "Tool capabilities pool",
+      "sandboxId": "default",
+      "capabilities": [
+        "tool.search",
+        "tool.calculator",
+        "tool.codegen"
+      ],
+      "concurrentWorkers": 4,
+      "consumerGroup": "capabilities-workers"
+    }
+  ]
+}
