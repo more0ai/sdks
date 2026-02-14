@@ -32,3 +32,7 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Worker local config (examples kept)
+worker/config.json
+worker/bootstrap.json

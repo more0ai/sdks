@@ -6,4 +6,4 @@ Pipeline-based: resolution, discovery, bootstrap, and transport over NATS. Depen
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](../LICENSE).

@@ -6,4 +6,4 @@ Subscribes to NATS subjects, validates envelopes with `@more0ai/core`, and runs 
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](../LICENSE).
