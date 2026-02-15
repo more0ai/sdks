@@ -33,21 +33,31 @@ import { createEnrichContextMiddleware } from "./middleware/enrich-context.js";
 import { createNatsTransportCore } from "./transport/nats-transport.js";
 import { NatsConnectionPool } from "./transport/connection-pool.js";
 import type { CapabilityClientConfig } from "./config.js";
-import type { RegistryChangedEvent } from "./types/registry.js";
+import type { DiscoverInput, RegistryChangedEvent, ResolveOutput, VersionStatus } from "./types/registry.js";
+import { resolveLogger, type Logger, type LoggerFactory } from "./types/logger.js";
 
 const SERVICE_NAME = "capabilities-client";
+
+function parseJson<T>(data: Uint8Array, fallbackError: string): T {
+  try {
+    const raw = new TextDecoder().decode(data);
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    throw new Error(`${SERVICE_NAME}:parseJson - ${fallbackError}: ${(err as Error).message}`);
+  }
+}
 
 export interface CapabilityClientOptions {
   config: CapabilityClientConfig;
   /** Pre-created NATS connection (optional; will create one if not provided) */
   natsConnection?: NatsConnection;
-  /** Logger factory */
-  loggerFactory?: any;
+  /** Logger factory (Logger or { get(name): Logger }) */
+  loggerFactory?: LoggerFactory;
 }
 
 export class CapabilityClient {
   private config: CapabilityClientConfig;
-  private log: any;
+  private log: Logger;
 
   // Connections
   private natsConnection?: NatsConnection;
@@ -73,7 +83,7 @@ export class CapabilityClient {
 
   constructor(options: CapabilityClientOptions) {
     this.config = options.config;
-    this.log = options.loggerFactory?.get?.(SERVICE_NAME) ?? options.loggerFactory ?? console;
+    this.log = resolveLogger(options.loggerFactory, SERVICE_NAME);
 
     if (options.natsConnection) {
       this.natsConnection = options.natsConnection;
@@ -237,6 +247,8 @@ export class CapabilityClient {
     capability: string;
     method: string;
     payload: unknown;
+    /** Resolved version (for logging/debugging); defaults to "0.0.0" if omitted */
+    version?: string;
     ctx?: Partial<InvocationContext>;
     timeoutMs?: number;
   }): Promise<InvocationResult<T>> {
@@ -247,7 +259,7 @@ export class CapabilityClient {
       capability: params.capability,
       method: params.method,
       params: params.payload,
-      resolved: { natsUrl: params.natsUrl, subject: params.subject, version: "0.0.0" },
+      resolved: { natsUrl: params.natsUrl, subject: params.subject, version: params.version ?? "0.0.0" },
       ctx: {
         ...params.ctx,
         tenantId: params.ctx?.tenantId || this.config.defaultTenantId || "default",
@@ -270,7 +282,7 @@ export class CapabilityClient {
     return this.resolutionClient!.resolve({ cap, ver });
   }
 
-  async discover(params: { app?: string; tags?: string[]; query?: string }) {
+  async discover(params: DiscoverInput) {
     this.ensureInitialized();
     return this.discoveryClient!.discover(params);
   }
@@ -326,7 +338,7 @@ export class CapabilityClient {
       new TextEncoder().encode("{}"),
       { timeout: this.config.requestTimeoutMs ?? 10_000 },
     );
-    const data = JSON.parse(new TextDecoder().decode(response.data));
+    const data = parseJson<{ capabilities?: unknown }>(response.data, "Invalid bootstrap response (not JSON)");
 
     const capabilities = data?.capabilities;
     if (!capabilities || typeof capabilities !== "object") {
@@ -338,35 +350,31 @@ export class CapabilityClient {
     this.bootstrappedCapabilities = [];
     for (const [capRef, capData] of Object.entries(capabilities)) {
       const cap = capData as Record<string, unknown>;
-      if (cap.subject && typeof cap.subject === "string") {
-        const natsUrl = (cap.natsUrl as string) ?? defaultNats;
-        const subject = cap.subject as string;
-        const major = (cap.major as number) ?? 1;
-        const version = (cap.version as string) ?? "1.0.0";
-        const methods = (cap.methods as string[]) ?? [];
-        this.resolutionCache!.set({
-          cap: capRef,
-          value: {
-            canonicalIdentity: `cap:@main/${capRef}@${version}`,
-            natsUrl,
-            subject,
-            major,
-            resolvedVersion: version,
-            status: "active",
-            ttlSeconds: 0,
-            etag: `bootstrap-${Date.now()}`,
-            methods: methods.map((name) => ({
-              name,
-              description: undefined,
-              modes: ["sync"],
-              tags: [],
-            })),
-          },
-          ttlMs: Number.POSITIVE_INFINITY,
-        });
-        this.bootstrappedCapabilities.push(capRef);
-        count++;
-      }
+      // Bootstrap response is resolve-shaped (ResolveOutput): require canonicalIdentity, subject
+      if (!cap || typeof cap.canonicalIdentity !== "string" || typeof cap.subject !== "string") continue;
+      const methods = cap.methods as Array<{ name: string; description?: string; modes?: string[]; tags?: string[] }> | undefined;
+      const methodList = Array.isArray(methods)
+        ? methods.map((m) => ({ name: m.name, description: m.description, modes: m.modes ?? ["sync"], tags: m.tags ?? [] }))
+        : [];
+      const status = (cap.status as string) ?? "active";
+      const value: ResolveOutput = {
+        canonicalIdentity: cap.canonicalIdentity as string,
+        natsUrl: (cap.natsUrl as string) ?? defaultNats,
+        subject: cap.subject as string,
+        major: (cap.major as number) ?? 1,
+        resolvedVersion: (cap.resolvedVersion as string) ?? "1.0.0",
+        status: status as VersionStatus,
+        ttlSeconds: (cap.ttlSeconds as number) ?? 0,
+        etag: (cap.etag as string) ?? "bootstrap",
+        methods: methodList,
+      };
+      this.resolutionCache!.set({
+        cap: capRef,
+        value,
+        ttlMs: Number.POSITIVE_INFINITY,
+      });
+      this.bootstrappedCapabilities.push(capRef);
+      count++;
     }
 
     if (count === 0) {
@@ -404,7 +412,7 @@ export class CapabilityClient {
         new TextEncoder().encode(JSON.stringify(req)),
         { timeout: this.config.requestTimeoutMs ?? 30_000 },
       );
-      const resp = JSON.parse(new TextDecoder().decode(response.data)) as RegistryResponse;
+      const resp = parseJson<RegistryResponse>(response.data, "Invalid registry response (not JSON)");
       if (!resp.ok) {
         const err = resp.error;
         const e = new Error(err?.message ?? "Remote call failed") as Error & { code?: string };
@@ -441,6 +449,7 @@ export class CapabilityClient {
     const core = createNatsTransportCore({
       connectionPool: this.connectionPool!,
       config: { defaultTimeoutMs: this.config.defaultTimeoutMs ?? 30_000, includeTiming: true },
+      log: this.log,
     });
 
     return buildPipeline({ middleware, core });

@@ -21,14 +21,26 @@ import type {
   InvocationResult,
 } from "@more0ai/common";
 import type { ResolutionClient } from "../resolution/client.js";
+import type { ResolutionContext } from "../types/registry.js";
+import { resolveLogger, type LoggerFactory } from "../types/logger.js";
 
 const SERVICE_NAME = "capabilities-client:resolve-middleware";
 
+function toResolutionContext(ctx: { tenantId?: string; env?: string; aud?: string; features?: string[] }): ResolutionContext | undefined {
+  if (!ctx.tenantId && !ctx.env && !ctx.aud && !(ctx.features?.length)) return undefined;
+  return {
+    tenantId: ctx.tenantId,
+    env: ctx.env,
+    aud: ctx.aud,
+    features: ctx.features,
+  };
+}
+
 export function createResolveMiddleware(params: {
   resolutionClient: ResolutionClient;
-  loggerFactory?: any;
+  loggerFactory?: LoggerFactory;
 }): Middleware {
-  const log = params.loggerFactory?.get?.(SERVICE_NAME) ?? params.loggerFactory ?? console;
+  const log = resolveLogger(params.loggerFactory, SERVICE_NAME);
 
   return (next: (env: InvocationEnvelope, signal: AbortSignal) => Promise<InvocationResult<unknown>>) =>
     async (env: InvocationEnvelope, signal: AbortSignal) => {
@@ -43,7 +55,7 @@ export function createResolveMiddleware(params: {
     const result = await params.resolutionClient.resolve({
       cap: env.capability,
       ver: env.version,
-      ctx: env.ctx.tenantId ? { tenantId: env.ctx.tenantId } : undefined,
+      ctx: toResolutionContext(env.ctx),
     });
 
     env.resolved = {

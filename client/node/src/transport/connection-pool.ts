@@ -278,9 +278,11 @@ export class NatsConnectionPool {
     }
   }
 
-  /** Normalize a NATS URL for consistent map keying. */
+  /**
+   * Normalize a NATS URL for consistent map keying.
+   * Only nats:// URLs are supported; lowercasing the full URL is safe for that scheme.
+   */
   static normalizeUrl(url: string): string {
-    // Trim trailing slash and lowercase protocol/host
     return url.replace(/\/+$/, "").toLowerCase();
   }
 }

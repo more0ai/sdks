@@ -71,6 +71,10 @@ export {
 export { TTLCache, type TTLCacheConfig } from "./cache/ttl-cache.js";
 export { InFlightDedup } from "./cache/dedup.js";
 
+// Logger (for typed logger factory)
+export type { Logger, LoggerFactory } from "./types/logger.js";
+export { resolveLogger } from "./types/logger.js";
+
 // Registry wire types
 export type {
   ResolveInput,

@@ -14,6 +14,42 @@ import type { NatsAuthProvider, NatsCredentials, NatsAuthProviderParams } from "
 
 const SERVICE_NAME = "capabilities-client:http-auth-provider";
 
+function validateNatsCredentials(raw: unknown): NatsCredentials {
+  if (raw === null || typeof raw !== "object") {
+    throw new Error(`${SERVICE_NAME}:validate - Auth server response is not an object`);
+  }
+  const o = raw as Record<string, unknown>;
+  const creds: NatsCredentials = {};
+  if (o.token !== undefined) {
+    if (typeof o.token !== "string") throw new Error(`${SERVICE_NAME}:validate - credentials.token must be string`);
+    creds.token = o.token;
+  }
+  if (o.user !== undefined) {
+    if (typeof o.user !== "string") throw new Error(`${SERVICE_NAME}:validate - credentials.user must be string`);
+    creds.user = o.user;
+  }
+  if (o.pass !== undefined) {
+    if (typeof o.pass !== "string") throw new Error(`${SERVICE_NAME}:validate - credentials.pass must be string`);
+    creds.pass = o.pass;
+  }
+  if (o.jwt !== undefined) {
+    if (typeof o.jwt !== "string") throw new Error(`${SERVICE_NAME}:validate - credentials.jwt must be string`);
+    creds.jwt = o.jwt;
+  }
+  if (o.nkeySeed !== undefined) {
+    if (typeof o.nkeySeed !== "string") throw new Error(`${SERVICE_NAME}:validate - credentials.nkeySeed must be string`);
+    creds.nkeySeed = o.nkeySeed;
+  }
+  if (o.expiresAt !== undefined) {
+    if (typeof o.expiresAt !== "number") throw new Error(`${SERVICE_NAME}:validate - credentials.expiresAt must be number`);
+    creds.expiresAt = o.expiresAt;
+  }
+  if (!creds.token && !creds.user && !creds.jwt) {
+    throw new Error(`${SERVICE_NAME}:validate - Auth server response must include at least one of: token, user, jwt`);
+  }
+  return creds;
+}
+
 export interface HttpNatsAuthProviderConfig {
   /** Base URL of the auth server (e.g., "https://auth.example.com") */
   authServerUrl: string;
@@ -62,7 +98,12 @@ export function createHttpNatsAuthProvider(config: HttpNatsAuthProviderConfig): 
       );
     }
 
-    const credentials: NatsCredentials = await response.json();
-    return credentials;
+    let raw: unknown;
+    try {
+      raw = await response.json();
+    } catch (err) {
+      throw new Error(`${SERVICE_NAME}:request - Auth server response is not JSON: ${(err as Error).message}`);
+    }
+    return validateNatsCredentials(raw);
   };
 }

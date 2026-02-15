@@ -15,10 +15,23 @@ import type {
   InvocationEnvelope,
   InvocationResult,
 } from "@more0ai/common";
-import { CapabilityError } from "@more0ai/common";
+import { CapabilityError, type CapabilityErrorCode } from "@more0ai/common";
 import type { NatsConnectionPool } from "./connection-pool.js";
+import type { Logger } from "../types/logger.js";
 
 const SERVICE_NAME = "capabilities-client:nats-transport";
+
+function parseInvocationResponse(data: Uint8Array): Record<string, unknown> {
+  try {
+    return JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>;
+  } catch (err) {
+    throw new CapabilityError({
+      code: "INTERNAL_ERROR",
+      message: `${SERVICE_NAME}:invoke - Invalid response (not JSON): ${(err as Error).message}`,
+      retryable: false,
+    });
+  }
+}
 
 export interface NatsTransportConfig {
   /** Default request timeout in milliseconds */
@@ -48,9 +61,12 @@ export function createNatsTransportCore(params: {
   connectionPool: NatsConnectionPool;
   config?: Partial<NatsTransportConfig>;
   clock?: { now(): number };
+  /** Optional logger; when set, logs subject and natsUrl from registry on each invoke */
+  log?: Logger;
 }): (env: InvocationEnvelope, signal: AbortSignal) => Promise<InvocationResult<unknown>> {
   const config = { ...defaultNatsTransportConfig, ...params.config };
   const clock = params.clock ?? { now: () => Date.now() };
+  const log = params.log;
 
   return async (env: InvocationEnvelope, signal: AbortSignal): Promise<InvocationResult<unknown>> => {
     if (!env.resolved?.subject) {
@@ -72,6 +88,11 @@ export function createNatsTransportCore(params: {
     // Get connection for the target NATS server (default or remote sandbox)
     const nats = await params.connectionPool.getOrConnect(env.resolved.natsUrl);
 
+    log?.info?.(
+      { subject: env.resolved.subject, natsUrl: env.resolved.natsUrl, capability: env.capability, method: env.method },
+      `${SERVICE_NAME}:invoke - Invoking (subject from registry)`
+    );
+
     const startedAt = clock.now();
     const timeoutMs = env.ctx.timeoutMs ?? config.defaultTimeoutMs;
 
@@ -87,17 +108,18 @@ export function createNatsTransportCore(params: {
       timeout: timeoutMs,
     });
 
-    const decoded = JSON.parse(new TextDecoder().decode(response.data));
+    const decoded = parseInvocationResponse(response.data);
 
     if (decoded.ok === false) {
       const endedAt = clock.now();
+      const err = (decoded.error ?? {}) as { code?: string; message?: string; retryable?: boolean; details?: unknown };
       return {
         ok: false,
         error: {
-          code: decoded.error?.code ?? "INTERNAL_ERROR",
-          message: decoded.error?.message ?? "Unknown server error",
-          retryable: decoded.error?.retryable ?? false,
-          details: decoded.error?.details,
+          code: (err.code ?? "INTERNAL_ERROR") as CapabilityErrorCode,
+          message: err.message ?? "Unknown server error",
+          retryable: err.retryable ?? false,
+          details: err.details,
         },
         meta: {
           startedAtUnixMs: startedAt,
