@@ -1,0 +1,16 @@
+{
+    "name": "more0ai/client",
+    "description": "PHP client for invoking and discovering more0ai capabilities via NATS",
+    "type": "library",
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "More0ai\\Client\\": "src/"
+        }
+    },
+    "autoload-dev": {}
+}

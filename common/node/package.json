@@ -1,0 +1,79 @@
+{
+  "name": "@more0ai/common",
+  "version": "0.1.0",
+  "repository": "github:more0ai/more0ai",
+  "description": "Shared core for more0ai: envelope types, pipeline, middleware, policy, wire protocol, bootstrap, and worker assignments",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js"
+    },
+    "./pep": {
+      "types": "./dist/pep.d.ts",
+      "import": "./dist/pep.js"
+    },
+    "./envelope": {
+      "types": "./dist/envelope.d.ts",
+      "import": "./dist/envelope.js"
+    },
+    "./envelope-schema": {
+      "types": "./dist/envelope-schema.d.ts",
+      "import": "./dist/envelope-schema.js"
+    },
+    "./pipeline": {
+      "types": "./dist/pipeline.d.ts",
+      "import": "./dist/pipeline.js"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
+    "./policy": {
+      "types": "./dist/policy/index.d.ts",
+      "import": "./dist/policy/index.js"
+    },
+    "./wire": {
+      "types": "./dist/wire.d.ts",
+      "import": "./dist/wire.js"
+    },
+    "./registry-methods": {
+      "types": "./dist/registry-methods.d.ts",
+      "import": "./dist/registry-methods.js"
+    },
+    "./bootstrap": {
+      "types": "./dist/bootstrap.d.ts",
+      "import": "./dist/bootstrap.js"
+    },
+    "./resolved-route": {
+      "types": "./dist/resolved-route.d.ts",
+      "import": "./dist/resolved-route.js"
+    },
+    "./worker-assignments": {
+      "types": "./dist/worker-assignments.d.ts",
+      "import": "./dist/worker-assignments.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/pep.ts src/envelope.ts src/envelope-schema.ts src/pipeline.ts src/errors.ts src/utils.ts src/middleware.ts src/policy/index.ts src/wire.ts src/registry-methods.ts src/bootstrap.ts src/resolved-route.ts src/worker-assignments.ts --dts --format esm --clean",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.6.0"
+  }
+}

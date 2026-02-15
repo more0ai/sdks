@@ -1,9 +1,10 @@
-# @more0ai/worker
+# Worker SDKs
 
 Worker pool for capability invocations with consumer-group subscription.
 
-Subscribes to NATS subjects, validates envelopes with `@more0ai/core`, and runs registered capability handlers.
+| Language | Path    | Package / install          |
+|----------|---------|----------------------------|
+| Node/TS  | `node/` | `@more0ai/worker` (pnpm)   |
+| PHP      | `php/`  | `more0ai/worker` (Composer)|
 
-## License
-
-Apache License 2.0. See [LICENSE](../LICENSE).
+See each language directory for usage.

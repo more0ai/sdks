@@ -1,0 +1,26 @@
+{
+  "name": "@more0ai/worker",
+  "version": "0.1.0",
+  "repository": "github:more0ai/more0ai",
+  "description": "Worker pool for capability invocations with consumer-group subscription",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "seed": "tsx scripts/seed.ts",
+    "lint": "eslint src --ext .ts",
+    "clean": "npx rimraf -I .turbo dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@more0ai/common": "workspace:*",
+    "dotenv": "^16.4.5",
+    "nats": "^2.29.3"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -34,5 +34,5 @@ Thumbs.db
 *.tsbuildinfo
 
 # Worker local config (examples kept)
-worker/config.json
-worker/bootstrap.json
+worker/node/config.json
+worker/node/bootstrap.json

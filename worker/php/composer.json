@@ -1,0 +1,17 @@
+{
+    "name": "more0ai/worker",
+    "description": "PHP worker pool for more0ai capability invocations with consumer-group subscription",
+    "type": "library",
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=8.1",
+        "more0ai/common": "*"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "More0ai\\Worker\\": "src/"
+        }
+    },
+    "autoload-dev": {}
+}
