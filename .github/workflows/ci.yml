@@ -39,4 +39,4 @@ jobs:
         continue-on-error: true
 
       - name: Test
-        run: pnpm -r run test --if-present
+        run: pnpm run test

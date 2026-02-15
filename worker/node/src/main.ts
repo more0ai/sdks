@@ -5,7 +5,7 @@
  */
 
 import "dotenv/config";
-import { createNodeJSLogger } from "@morezero/logger";
+import { createNodeJSLogger } from "./logger.js";
 import { loadConfig } from "./config.js";
 import { WorkerPoolManager } from "./worker-pool.js";
 

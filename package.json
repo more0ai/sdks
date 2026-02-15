@@ -5,7 +5,8 @@
   "description": "Monorepo for @more0ai/common, @more0ai/client, @more0ai/worker",
   "scripts": {
     "build": "pnpm -r run build",
-    "typecheck": "pnpm -r run typecheck --if-present"
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
