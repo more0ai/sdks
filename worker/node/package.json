@@ -1,7 +1,8 @@
 {
   "name": "@more0ai/worker",
-  "version": "0.1.0",
-  "repository": "github:more0ai/more0ai",
+  "version": "0.1.1",
+  "repository": "github:more0ai/sdks",
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "description": "Worker pool for capability invocations with consumer-group subscription",
   "type": "module",
   "scripts": {
