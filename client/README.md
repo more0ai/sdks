@@ -1,9 +1,10 @@
-# @more0ai/client
+# Client SDKs
 
-Single entry point for more0ai interaction — client for invoking and discovering capabilities via NATS.
+Client for invoking and discovering more0ai capabilities.
 
-Pipeline-based: resolution, discovery, bootstrap, and transport over NATS. Depends on `@more0ai/core`.
+| Language | Path    | Package / install          |
+|----------|---------|----------------------------|
+| Node/TS  | `node/` | `@more0ai/client` (pnpm)   |
+| PHP      | `php/`  | `more0ai/client` (Composer)|
 
-## License
-
-Apache License 2.0. See [LICENSE](../LICENSE).
+See each language directory for usage.

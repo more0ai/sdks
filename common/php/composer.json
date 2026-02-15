@@ -1,0 +1,16 @@
+{
+    "name": "more0ai/common",
+    "description": "Shared core for more0ai: envelope types, pipeline, middleware, policy, wire protocol, bootstrap, worker assignments",
+    "type": "library",
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "More0ai\\Common\\": "src/"
+        }
+    },
+    "autoload-dev": {}
+}

@@ -1,4 +1,4 @@
 packages:
-  - "core"
-  - "client"
-  - "worker"
+  - "client/node"
+  - "common/node"
+  - "worker/node"
