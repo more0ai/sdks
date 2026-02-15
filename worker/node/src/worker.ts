@@ -2,6 +2,7 @@
  * Worker: handles one request message (decode envelope, run handler in sandbox context, reply).
  */
 
+import type { InvocationEnvelope } from "@more0ai/common";
 import { InvocationEnvelopeSchema } from "@more0ai/common";
 import type { Sandbox } from "./config.js";
 import { getHandler } from "./handler-registry.js";
@@ -24,9 +25,9 @@ export interface HandleMessageParams {
 export async function handleMessage(params: HandleMessageParams): Promise<unknown> {
   const { body, sandbox, log = console } = params;
   const text = typeof body === "string" ? body : new TextDecoder().decode(body);
-  let envelope: unknown;
+  let rawEnvelope: unknown;
   try {
-    envelope = JSON.parse(text);
+    rawEnvelope = JSON.parse(text);
   } catch (err: any) {
     log.warn?.({ error: err?.message }, `${LOG_PREFIX}:handleMessage - Invalid JSON`);
     return {
@@ -39,7 +40,7 @@ export async function handleMessage(params: HandleMessageParams): Promise<unknow
     };
   }
 
-  const parsed = InvocationEnvelopeSchema.safeParse(envelope);
+  const parsed = InvocationEnvelopeSchema.safeParse(rawEnvelope);
   if (!parsed.success) {
     log.warn?.(
       { errors: parsed.error.flatten() },
@@ -57,18 +58,19 @@ export async function handleMessage(params: HandleMessageParams): Promise<unknow
   }
 
   const env = parsed.data;
+  const envelope: InvocationEnvelope = { ...env, params: env.params ?? {} };
 
   log.info?.(
-    { capability: env.capability, method: env.method },
+    { capability: envelope.capability, method: envelope.method },
     `${LOG_PREFIX}:handleMessage - Invocation received`
   );
 
-  const handler = getHandler(env.capability);
+  const handler = getHandler(envelope.capability);
   const sandboxEnv = sandbox.env ?? {};
 
   try {
     const result = await handler({
-      envelope: env,
+      envelope,
       sandboxEnv,
     });
     return result;

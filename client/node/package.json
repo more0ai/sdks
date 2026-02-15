@@ -1,6 +1,6 @@
 {
   "name": "@more0ai/client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "github:more0ai/sdks",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
